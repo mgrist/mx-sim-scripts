@@ -19,5 +19,6 @@ Example:
 trackinfo/alcrest.trackinfo
 ```
 ## Scripts
+**You must be a server admin to run commands.**
 ### Elimination
-The `elimination.js` script is used to host "elimination" races. Type in the server command `server, elim <n>` to eliminate the last "n" players. You **must be a server admin** to run this command. When players are eliminated, a message will be broadcast to the server, and the player will be moved into spectator mode.  
+The `elimination.js` script is used to host "elimination" races. Type in the server command `server, quali <n>` to qualify the top "n" players. The remaining players will be eliminated. When players are eliminated, a message will be broadcast to the server, and the player will be moved into spectator mode.

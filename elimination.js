@@ -1,11 +1,10 @@
 /*
 ############################################################
-"elim" command
-Eliminate the specificied number of players from the race.
-The last "n" players will be eliminated.
+"quali" command
+Qualifies the top "n" players. The remaining players are eliminated
 When a player is eliminated, they are forced into spectator mode.
 example:
-elim 5
+quali 5
 ############################################################
 */
 
@@ -16,7 +15,7 @@ var g_holeshot_index = 1;
 
 function elimPlayers(slot, cmdline) {
   try {
-    if (cmdline.match(/^\s*elim\b/) == null) {
+    if (cmdline.match(/^\s*quali\b/) == null) {
       return command_handler(slot, cmdline);
     }
 
@@ -25,43 +24,44 @@ function elimPlayers(slot, cmdline) {
       return 1;
     }
 
-    var cliArgs = cmdline.match(/^\s*elim\s*(\d+)/);
+    var cliArgs = cmdline.match(/^\s*quali\s*(\d+)/);
     var resultsFile = mxserver.file_to_string("./results.txt").split("\n");
     raceinfo = parse_server_results(resultsFile);
     sanitize_raceinfo(raceinfo);
 
     var playerCount = raceinfo.players.length;
+    var numberToQuali = parseInt(cliArgs[1]);
 
     // Error check the users input
     if (cliArgs == null) {
-      mxserver.send(slot, "Usage: server, elim <number>");
+      mxserver.send(slot, "Usage: server, quali <number>");
       return 1;
     } else if (cliArgs.length < 2) {
-      mxserver.send(slot, "Usage: server, elim <number>");
+      mxserver.send(slot, "Usage: server, quali <number>");
       return 1;
-    } else if (cliArgs[1] < 1) {
+    } else if (numberToQuali < 1) {
       mxserver.send(slot, "Invalid number");
       return 1;
-    } else if (cliArgs[1] > mxserver.max_slots) {
-      mxserver.send(
-        slot,
-        "Number too high. Maximum slots is " + mxserver.max_slots
-      );
-      return 1;
-    } else if (playerCount < cliArgs[1]) {
-      mxserver.send(
-        slot,
-        "Not enough players to eliminate. Current player count is " +
-          playerCount
-      );
+    } else if (
+      numberToQuali > mxserver.max_slots ||
+      numberToQuali > playerCount
+    ) {
+      mxserver.send(slot, "Qualifying all players.");
+      numberToQuali = playerCount;
       return 1;
     }
 
-    var numberToElim = parseInt(cliArgs[1]);
-    mxserver.log("Eliminating " + numberToElim + " players\n");
-    for (var num = 1; num <= numberToElim; num++) {
-      var orderCount = raceinfo.order.legnth;
-      var playerIndex = raceinfo.order[orderCount - num].index;
+    var eliminatedPlayers = playerCount - numberToQuali;
+    mxserver.send(
+      slot,
+      "Eliminating " + eliminatedPlayers + " players."
+    );
+    
+    for (var num = 0; num < playerCount; num++) {
+      if (num < numberToQuali) {
+        continue;
+      }
+      var playerIndex = raceinfo.order[num].index;
       var playerInfo = raceinfo.players[playerIndex];
       var message = "[red]" + playerInfo.name + " has been eliminated.";
       mxserver.broadcast(
